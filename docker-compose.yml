@@ -1,0 +1,54 @@
+services:
+  backend:
+    build:
+      context: ./learning-back-end
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    depends_on:
+      - db
+      - cache
+    environment:
+      DATABASE_URL: mysql://root:rootpass@db:3306/mydb
+      REDIS_URL: redis://cache:6379
+      FRONT_END_URL: http://localhost:3000
+      PORT: 3001
+    command: sh -c "until nc -z db 3306; do echo '⏳ Waiting for MySQL...'; sleep 1; done && echo '✅ MySQL is up!' && npx prisma migrate deploy --schema=./prisma/schema.prisma  && npm run start:prod"
+    networks:
+      - shared-network
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: "rootpass"
+      MYSQL_DATABASE: mydb
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - shared-network
+  cache:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./learning-back-end/src/configs/.redis.conf:/usr/local/etc/redis/redis.conf
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    networks:
+      - shared-network
+  nginx-learning-foreign-language:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - backend
+    networks:
+      - shared-network
+networks:
+  shared-network:
+
+volumes:
+  mysql_data:
