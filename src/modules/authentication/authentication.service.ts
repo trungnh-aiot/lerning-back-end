@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { plainToInstance } from 'class-transformer';
 import { ERROR_MESSAGES } from 'src/common/constants/messages.constants';
+import { LogMethod } from 'src/common/decorators/log-method.decorator';
 import { configuration } from 'src/configs/configuration';
 
 import { UserService } from '../user/user.service';
@@ -19,6 +20,7 @@ export class AuthenticationService {
     private loginStrategyFactory: LoginStrategyFactory,
     private jwtService: JwtService,
   ) {}
+  @LogMethod()
   async login(loginDto: LoginDto) {
     const loginStrategy = this.loginStrategyFactory.getStrategy(
       loginDto.provider,
@@ -39,6 +41,7 @@ export class AuthenticationService {
       }),
     };
   }
+  @LogMethod()
   async signUp(signUpDto: SignUpDto) {
     const foundUser = await this.userService.findOneByEmail({
       email: signUpDto.email,

@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ERROR_MESSAGES } from 'src/common/constants/messages.constants';
+import { LogMethod } from 'src/common/decorators/log-method.decorator';
 
 import { FacebookStrategy } from '../strategies/facebook.strategy';
 import { GoogleStrategy } from '../strategies/google.strategy';
@@ -13,6 +14,7 @@ export class LoginStrategyFactory {
     private google: GoogleStrategy,
     private facebook: FacebookStrategy,
   ) {}
+  @LogMethod()
   public getStrategy(provider: AuthProviderType) {
     switch (provider) {
       case AuthProviderType.facebook:
