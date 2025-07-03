@@ -6,7 +6,9 @@ import { DatabaseService } from 'src/database/database.service';
 
 import { LoginDto } from './dto/login.dto';
 import { PublicUserDto } from './dto/public-user.dto';
+import { SignUpDto } from './dto/sign-up.dto';
 import { LoginStrategyFactory } from './factory/login-strategy.factory';
+import { AuthProviderType } from './types/auth-provider.type';
 
 @Injectable()
 export class AuthenticationService {
@@ -34,5 +36,13 @@ export class AuthenticationService {
         excludeExtraneousValues: true,
       }),
     };
+  }
+  async signUp(signUpDto: SignUpDto) {
+    await this.databaseService.user.create({
+      data: {
+        provider: AuthProviderType.local,
+        ...signUpDto,
+      },
+    });
   }
 }

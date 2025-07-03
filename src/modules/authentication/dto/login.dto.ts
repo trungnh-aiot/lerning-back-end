@@ -6,6 +6,7 @@ import {
   ValidateIf,
 } from 'class-validator';
 
+import { ERROR_MESSAGES } from '../../../common/constants/messages.constants';
 import { AuthProviderType } from '../types/auth-provider.type';
 
 export class LoginDto {
@@ -21,11 +22,9 @@ export class LoginDto {
   @MinLength(6)
   password?: string;
 
-  @ValidateIf((o: LoginDto) => o.provider !== AuthProviderType.local)
-  @IsString()
-  providerUserId?: string;
-
-  @ValidateIf((o: LoginDto) => o.provider !== AuthProviderType.local)
+  @ValidateIf((o: LoginDto) => o.provider !== AuthProviderType.local, {
+    message: ERROR_MESSAGES.AUTHENTICATION.NOT_FOUND_FACBOOK_TOKEN,
+  })
   @IsString()
   token?: string;
 }
