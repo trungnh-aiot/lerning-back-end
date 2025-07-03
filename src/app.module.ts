@@ -4,6 +4,8 @@ import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { LoggerInterceptor } from './common/interceptors/logger.interceptor';
+import { LoggerModule } from './common/logger/logger.module';
 import { validate } from './configs/environment-variables.config';
 import { DatabaseModule } from './database/database.module';
 import { AuthenticationModule } from './modules/authentication/authentication.module';
@@ -20,6 +22,7 @@ import { UserModule } from './modules/user/user.module';
     DatabaseModule,
     AuthenticationModule,
     UserModule,
+    LoggerModule,
   ],
   controllers: [AppController],
   providers: [
@@ -31,6 +34,10 @@ import { UserModule } from './modules/user/user.module';
     {
       provide: APP_INTERCEPTOR,
       useClass: ResponseInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LoggerInterceptor,
     },
   ],
 })

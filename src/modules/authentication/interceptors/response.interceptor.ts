@@ -14,6 +14,7 @@ import {
 } from 'express';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
+import { LoggerService } from 'src/common/logger/logger.service';
 
 import { RESPONSE_MESSAGE_METADATA } from '../decorators/response-message.decorator';
 
@@ -28,7 +29,10 @@ export type Response<T> = {
 
 @Injectable()
 export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
-  constructor(private readonly reflector: Reflector) {}
+  constructor(
+    private readonly reflector: Reflector,
+    private readonly logger: LoggerService,
+  ) {}
   intercept(
     context: ExecutionContext,
     next: CallHandler,
@@ -52,14 +56,20 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
       exception instanceof HttpException
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
-
-    return {
+    const errorResponse = {
       status: false,
       statusCode: status,
       path: request.url,
       message: exception.message,
       data: null,
       timestamp: format(new Date().toISOString(), 'yyyy-MM-dd HH:mm:ss'),
+    };
+    this.logger.error(
+      `[${request.method}] ${request.url}`,
+      JSON.stringify(errorResponse),
+    );
+    return {
+      ...errorResponse,
     };
   }
 
@@ -73,8 +83,7 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
         RESPONSE_MESSAGE_METADATA,
         context.getHandler(),
       ) || 'success';
-
-    return {
+    const successResponse = {
       status: true,
       path: request.url,
       message,
@@ -82,5 +91,10 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
       data: res,
       timestamp: format(new Date().toISOString(), 'yyyy-MM-dd HH:mm:ss'),
     };
+    this.logger.log(
+      `[${request.method}] ${request.url}`,
+      JSON.stringify(successResponse),
+    );
+    return { ...successResponse };
   }
 }
