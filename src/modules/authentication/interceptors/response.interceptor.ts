@@ -1,8 +1,6 @@
 import {
   CallHandler,
   ExecutionContext,
-  HttpException,
-  HttpStatus,
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
@@ -12,8 +10,8 @@ import {
   Request as ExpressRequest,
   Response as ExpressResponse,
 } from 'express';
-import { Observable, throwError } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { LoggerService } from 'src/common/logger/logger.service';
 
 import { RESPONSE_MESSAGE_METADATA } from '../decorators/response-message.decorator';
@@ -37,40 +35,9 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
     context: ExecutionContext,
     next: CallHandler,
   ): Observable<Response<T>> {
-    return next.handle().pipe(
-      map((res: T) => this.responseHandler(res, context)),
-      catchError((err: HttpException) =>
-        throwError(() => this.errorHandler(err, context)),
-      ),
-    );
-  }
-
-  errorHandler(
-    exception: HttpException,
-    context: ExecutionContext,
-  ): Response<null> {
-    const ctx = context.switchToHttp();
-    const request = ctx.getRequest<ExpressRequest>();
-
-    const status =
-      exception instanceof HttpException
-        ? exception.getStatus()
-        : HttpStatus.INTERNAL_SERVER_ERROR;
-    const errorResponse = {
-      status: false,
-      statusCode: status,
-      path: request.url,
-      message: exception.message,
-      data: null,
-      timestamp: format(new Date().toISOString(), 'yyyy-MM-dd HH:mm:ss'),
-    };
-    this.logger.error(
-      `[${request.method}] ${request.url}`,
-      JSON.stringify(errorResponse),
-    );
-    return {
-      ...errorResponse,
-    };
+    return next
+      .handle()
+      .pipe(map((res: T) => this.responseHandler(res, context)));
   }
 
   responseHandler(res: T, context: ExecutionContext) {
